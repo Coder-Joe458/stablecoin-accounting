@@ -13,15 +13,24 @@
   },
   "public": false,
   "ignoreCommand": "echo 'Skip checks'",
-  "functions": {
-    "app/_not-found.tsx": {
-      "maxDuration": 5
-    },
-    "app/not-found.tsx": {
-      "maxDuration": 5
-    },
-    "app/error.tsx": {
-      "maxDuration": 5
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/_not-found",
+      "status": 404,
+      "dest": "/404"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 } 

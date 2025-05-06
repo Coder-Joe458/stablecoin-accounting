@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   
   // 禁用日志输出的配置
-  reactStrictMode: true,
+  reactStrictMode: false, // 关闭严格模式避免双重渲染
   
   // 构建输出配置
   output: 'standalone',
@@ -54,6 +54,21 @@ const nextConfig: NextConfig = {
   
   // 禁用静态HTML导出功能，使用Vercel动态渲染
   distDir: '.next',
+  
+  // 定义页面
+  async headers() {
+    return [
+      {
+        source: '/_not-found',
+        headers: [
+          {
+            key: 'x-robots-tag',
+            value: 'noindex',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
