@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import { Providers } from "../providers";
+import ClientEntry from "../client-entry";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -55,12 +55,12 @@ export default async function RootLayout(props: RootLayoutProps) {
       <html lang={locale} data-theme="light">
         <body className={`${inter.className} bg-white text-gray-900`}>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <Providers>
+            <ClientEntry>
               <div className="flex justify-end p-4 bg-white border-b border-gray-200">
                 <LanguageSwitcher />
               </div>
               {props.children}
-            </Providers>
+            </ClientEntry>
           </NextIntlClientProvider>
         </body>
       </html>
@@ -75,12 +75,12 @@ export default async function RootLayout(props: RootLayoutProps) {
       <html lang={defaultLocale} data-theme="light">
         <body className={`${inter.className} bg-white text-gray-900`}>
           <NextIntlClientProvider locale={defaultLocale} messages={fallbackMessages}>
-            <Providers>
+            <ClientEntry>
               <div className="flex justify-end p-4 bg-white border-b border-gray-200">
                 <LanguageSwitcher />
               </div>
               {props.children}
-            </Providers>
+            </ClientEntry>
           </NextIntlClientProvider>
         </body>
       </html>
