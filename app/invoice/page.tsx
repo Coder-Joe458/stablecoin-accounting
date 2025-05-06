@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import ClientEntry from '../client-entry';
 
-export default function InvoicePage() {
+// Client component that uses wagmi hooks
+function InvoiceContent() {
   const { address, isConnected } = useAccount();
   const [formData, setFormData] = useState({
     fromAddress: '',
@@ -248,10 +250,10 @@ export default function InvoicePage() {
           <form onSubmit={handlePreview} className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fromAddress">
-                收款方地址 (您的钱包)
+                收款地址
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono text-sm"
                 id="fromAddress"
                 name="fromAddress"
                 type="text"
@@ -261,13 +263,12 @@ export default function InvoicePage() {
                 required
               />
             </div>
-            
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="toAddress">
-                付款方地址
+                付款地址
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono text-sm"
                 id="toAddress"
                 name="toAddress"
                 type="text"
@@ -277,7 +278,6 @@ export default function InvoicePage() {
                 required
               />
             </div>
-            
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="amount">
                 金额 (USDC)
@@ -288,29 +288,13 @@ export default function InvoicePage() {
                 name="amount"
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.amount}
                 onChange={handleChange}
-                placeholder="100.00"
+                placeholder="0.00"
                 required
               />
             </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-                描述
-              </label>
-              <textarea
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="服务描述..."
-                rows={4}
-                required
-              />
-            </div>
-            
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
                 日期
@@ -325,33 +309,41 @@ export default function InvoicePage() {
                 required
               />
             </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="invoiceNumber">
-                发票编号
+            <div className="mb-6">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                交易描述
               </label>
-              <input
+              <textarea
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="invoiceNumber"
-                name="invoiceNumber"
-                type="text"
-                value={formData.invoiceNumber}
+                id="description"
+                name="description"
+                rows={3}
+                value={formData.description}
                 onChange={handleChange}
+                placeholder="输入交易的描述..."
                 required
               />
             </div>
-            
-            <div className="flex items-center justify-end">
+            <div className="flex justify-end">
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 type="submit"
               >
-                预览发票
+                生成预览
               </button>
             </div>
           </form>
         )}
       </div>
     </main>
+  );
+}
+
+// Main page component that wraps the client content with ClientEntry
+export default function InvoicePage() {
+  return (
+    <ClientEntry>
+      <InvoiceContent />
+    </ClientEntry>
   );
 } 
