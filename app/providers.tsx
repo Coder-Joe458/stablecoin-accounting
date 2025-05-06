@@ -14,7 +14,7 @@ const config = getDefaultConfig({
   appName: 'Stablecoin Accounting System',
   projectId, // 使用环境变量
   chains: [mainnet, polygon, base],
-  ssr: true,
+  ssr: false,
 });
 
 // 创建QueryClient实例

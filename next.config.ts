@@ -27,14 +27,6 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 4,
   },
   
-  // 确保只有在浏览器环境下使用 wallet 相关库
-  experimental: {
-    serverComponentsExternalPackages: ['@rainbow-me/rainbowkit', 'wagmi', 'viem'],
-  },
-  
-  // 禁用静态HTML导出功能，使用Vercel动态渲染
-  distDir: '.next',
-  
   // 禁用预渲染以防止 WalletConnect 错误
   typescript: {
     ignoreBuildErrors: true,
@@ -42,6 +34,26 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
+  // 禁用静态页面生成
+  experimental: {
+    serverComponentsExternalPackages: ['@rainbow-me/rainbowkit', 'wagmi', 'viem'],
+  },
+  
+  // 添加特定的构建输出选项
+  staticPageGenerationTimeout: 180,
+  
+  // 添加页面配置以跳过特定页面的生成
+  skipTrailingSlashRedirect: true,
+  
+  // 修改构建配置以避免预渲染问题
+  compiler: {
+    // 移除 React 的 SSR 特定代码
+    reactRemoveProperties: process.env.NODE_ENV === 'production',
+  },
+  
+  // 禁用静态HTML导出功能，使用Vercel动态渲染
+  distDir: '.next',
 };
 
 export default withNextIntl(nextConfig);

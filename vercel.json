@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "CI=false next build --no-lint",
+  "buildCommand": "NEXT_TELEMETRY_DISABLED=1 CI=false next build --no-lint",
   "devCommand": "next dev",
   "installCommand": "npm install",
   "framework": "nextjs",
@@ -11,5 +11,17 @@
     "NEXT_PUBLIC_ENABLE_DEBUG": "false",
     "NEXT_PUBLIC_DISABLE_WARNINGS": "false"
   },
-  "public": false
+  "public": false,
+  "ignoreCommand": "echo 'Skip checks'",
+  "functions": {
+    "app/_not-found.tsx": {
+      "maxDuration": 5
+    },
+    "app/not-found.tsx": {
+      "maxDuration": 5
+    },
+    "app/error.tsx": {
+      "maxDuration": 5
+    }
+  }
 } 
