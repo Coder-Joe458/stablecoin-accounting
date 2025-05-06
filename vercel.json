@@ -12,7 +12,6 @@
     "NEXT_PUBLIC_DISABLE_WARNINGS": "false"
   },
   "public": false,
-  "ignoreCommand": "echo 'Skip checks'",
   "builds": [
     {
       "src": "package.json",
