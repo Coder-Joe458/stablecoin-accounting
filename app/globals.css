@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
 }
 
 @theme inline {
@@ -14,8 +14,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* 覆盖暗黑模式的默认设置，强制使用亮色主题 */
+    --background: #ffffff;
+    --foreground: #000000;
   }
 }
 
@@ -23,4 +24,75 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 全局强制使用白色背景 */
+body, main, div, header, footer, nav, aside, section {
+  background-color: var(--background);
+}
+
+/* 增强表格文本对比度 */
+table {
+  color: var(--foreground);
+}
+
+/* 确保表格标题有足够对比度 */
+th {
+  color: white;
+  font-weight: 600;
+}
+
+/* 确保所有文本都有足够的对比度 */
+.text-gray-500 {
+  color: #4b5563;
+}
+
+.text-gray-400 {
+  color: #4b5563;
+}
+
+/* 强制覆盖深色模式 */
+html[data-theme="dark"] {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-gray-500 {
+    color: #4b5563;
+  }
+  
+  .text-gray-400 {
+    color: #4b5563;
+  }
+  
+  /* 暗黑模式下表格行背景增强对比度 */
+  tr.bg-gray-50 {
+    background-color: #f9fafb;
+  }
+  
+  /* 暗黑模式下确保文本可见 */
+  .bg-white {
+    background-color: #ffffff;
+  }
+  
+  .bg-gray-100 {
+    background-color: #f3f4f6;
+  }
+  
+  /* 确保深色表头文字是白色 */
+  .bg-gray-800, .bg-gray-900 {
+    background-color: #1f2937;
+  }
+  
+  .bg-gray-800 *, .bg-gray-900 * {
+    color: #ffffff;
+  }
+}
+
+/* 交易卡片样式 */
+.transaction-summary-card {
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }

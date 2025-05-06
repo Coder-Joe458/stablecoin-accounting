@@ -1,0 +1,104 @@
+{
+  "app": {
+    "title": "Stablecoin Accounting System",
+    "description": "Easily manage your stablecoin transaction records"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "export": "Export",
+    "refresh": "Refresh"
+  },
+  "nav": {
+    "home": "Home",
+    "transactions": "Transactions",
+    "invoice": "Invoice",
+    "settings": "Settings"
+  },
+  "home": {
+    "welcome": "Welcome to Stablecoin Accounting System",
+    "getStarted": "Get Started",
+    "recentTransactions": "Recent Transactions",
+    "supportInfo": "Currently only supporting USDC on Solana blockchain"
+  },
+  "wallet": {
+    "connect": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "address": "Wallet Address",
+    "balance": "Balance",
+    "copy": "Copy Address",
+    "copied": "Copied",
+    "enterAddress": "Enter Wallet Address"
+  },
+  "transaction": {
+    "title": "Transaction",
+    "id": "Transaction ID",
+    "hash": "Transaction Hash",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "date": "Date",
+    "time": "Time",
+    "type": "Type",
+    "status": "Status",
+    "netAmount": "Net Amount",
+    "direction": {
+      "in": "Inbound",
+      "out": "Outbound"
+    },
+    "details": "Transaction Details",
+    "noTransactions": "No transactions found",
+    "loadMore": "Load More"
+  },
+  "invoice": {
+    "title": "Invoice",
+    "generate": "Generate Invoice",
+    "download": "Download Invoice",
+    "print": "Print Invoice",
+    "recipient": "Recipient",
+    "sender": "Sender",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "invoiceNumber": "Invoice Number",
+    "notes": "Notes",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "total": "Total",
+    "description": "Description",
+    "details": "Details",
+    "walletAddress": "Wallet Address",
+    "preview": "Preview"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "currency": "Currency",
+    "notification": "Notification",
+    "darkMode": "Dark Mode",
+    "account": "Account Settings"
+  },
+  "language": {
+    "title": "Select Language",
+    "en": "English",
+    "zh": "中文"
+  },
+  "error": {
+    "generic": "An error occurred, please try again",
+    "network": "Network error, please check your connection",
+    "walletConnect": "Error connecting wallet",
+    "invalidAddress": "Invalid wallet address",
+    "transactionFailed": "Transaction failed",
+    "rateLimited": "Too many requests, please try again later",
+    "unsupportedChain": "Currently only supporting USDC on Solana blockchain. Other chains are not supported."
+  }
+} 
