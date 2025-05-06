@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { RainbowKitProvider, getDefaultConfig, lightTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { WagmiProvider } from 'wagmi';
@@ -20,16 +20,27 @@ const config = getDefaultConfig({
 // 创建QueryClient实例
 const queryClient = new QueryClient();
 
-export function Providers({ children }: { children: ReactNode }) {
-  // Use a fixed app name instead of relying on locale
-  const appName = 'Stablecoin Accounting System';
-  
+export default function ClientEntry({ children }: { children: ReactNode }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-pulse text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
           appInfo={{
-            appName: appName,
+            appName: 'Stablecoin Accounting System',
             learnMoreUrl: 'https://example.com/about',
           }}
           showRecentTransactions={true}

@@ -7,6 +7,7 @@ import * as Papa from 'papaparse';
 import Link from 'next/link';
 import { getUSDCTransactions, Transaction as ApiTransaction } from './components/AlchemyAPI';
 import WalletSelector from './components/WalletSelector';
+import ClientEntry from './client-entry';
 
 // 使用从API导入的Transaction类型
 type Transaction = ApiTransaction;
@@ -27,7 +28,7 @@ declare global {
   }
 }
 
-export default function Home() {
+function HomeContent() {
   const { address, isConnected } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -325,173 +326,174 @@ export default function Home() {
     }
   };
 
+  // 页面渲染
   return (
-    <main className="flex min-h-screen flex-col items-center p-6 md:p-12">
-      <div className="w-full max-w-5xl flex flex-col gap-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">稳定币记账系统</h1>
-          <Link href="/invoice" className="text-blue-600 hover:text-blue-800">
-            创建发票
-          </Link>
-        </div>
-        
-        {/* 钱包连接区域 */}
-        <div className="flex justify-center mb-4">
-          <WalletSelector />
-        </div>
-
-        {isConnected ? (
-          <>
-            {/* 汇总数据 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">总收入</p>
-                <p className="text-2xl font-bold text-green-600">${summary.totalIn.toFixed(2)}</p>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">总支出</p>
-                <p className="text-2xl font-bold text-red-600">${summary.totalOut.toFixed(2)}</p>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">净额</p>
-                <p className="text-2xl font-bold text-blue-600">${summary.netAmount.toFixed(2)}</p>
-              </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">稳定币交易记录</h1>
+      
+      <div className="mb-6">
+        <WalletSelector />
+      </div>
+      
+      {isConnected ? (
+        <>
+          {/* 汇总数据 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">总收入</p>
+              <p className="text-2xl font-bold text-green-600">${summary.totalIn.toFixed(2)}</p>
             </div>
-
-            {/* 操作按钮 */}
-            <div className="flex justify-end gap-2 mb-4">
-              <button
-                onClick={handleRefresh}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded"
-                disabled={isLoading}
-              >
-                刷新数据
-              </button>
-              <button
-                onClick={exportCSV}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center gap-1"
-                disabled={transactions.length === 0 || isLoading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                导出CSV
-              </button>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">总支出</p>
+              <p className="text-2xl font-bold text-red-600">${summary.totalOut.toFixed(2)}</p>
             </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">净额</p>
+              <p className="text-2xl font-bold text-blue-600">${summary.netAmount.toFixed(2)}</p>
+            </div>
+          </div>
 
-            {/* 错误信息 */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-4">
-                {error}
-              </div>
-            )}
+          {/* 操作按钮 */}
+          <div className="flex justify-end gap-2 mb-4">
+            <button
+              onClick={handleRefresh}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded"
+              disabled={isLoading}
+            >
+              刷新数据
+            </button>
+            <button
+              onClick={exportCSV}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center gap-1"
+              disabled={transactions.length === 0 || isLoading}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              导出CSV
+            </button>
+          </div>
 
-            {/* 交易列表 */}
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : transactions.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">币种</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">区块链</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">对方地址</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">交易哈希</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.map((tx, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{tx.formattedDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            tx.direction === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {tx.direction === 'in' ? '收入' : '支出'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${(() => {
-                            try {
-                              console.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
-                              
-                              if (tx.amount.includes('.')) {
-                                const amount = parseFloat(tx.amount).toFixed(2);
-                                console.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
-                                return amount;
-                              } else {
-                                // 假设所有整数金额都是按照6位小数存储的
-                                try {
-                                  const formattedAmount = parseFloat(formatUnits(BigInt(tx.amount), 6)).toFixed(2);
-                                  console.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
-                                  return formattedAmount;
-                                } catch (err) {
-                                  console.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
-                                  // 作为后备方案，尝试直接除以1000000
-                                  const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
-                                  console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
-                                  return fallbackAmount;
-                                }
-                              }
-                            } catch (error) {
-                              console.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
-                              // 作为后备方案，尝试直接除以1000000
+          {/* 错误信息 */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+
+          {/* 交易列表 */}
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : transactions.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">币种</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">区块链</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">对方地址</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">交易哈希</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.map((tx, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{tx.formattedDate}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          tx.direction === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {tx.direction === 'in' ? '收入' : '支出'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${(() => {
+                          try {
+                            console.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
+                            
+                            if (tx.amount.includes('.')) {
+                              const amount = parseFloat(tx.amount).toFixed(2);
+                              console.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
+                              return amount;
+                            } else {
+                              // 假设所有整数金额都是按照6位小数存储的
                               try {
+                                const formattedAmount = parseFloat(formatUnits(BigInt(tx.amount), 6)).toFixed(2);
+                                console.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
+                                return formattedAmount;
+                              } catch (err) {
+                                console.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
+                                // 作为后备方案，尝试直接除以1000000
                                 const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
                                 console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
                                 return fallbackAmount;
-                              } catch (e) {
-                                console.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
-                                return '格式错误';
                               }
                             }
-                          })()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {tx.coin || 'USDC'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {tx.chain === 'solana' ? 'Solana' : 'Ethereum'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {tx.direction === 'in' ? formatAddress(tx.from) : formatAddress(tx.to)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <a 
-                            href={tx.chain === 'solana' 
-                              ? `https://solscan.io/tx/${tx.hash}` 
-                              : `https://etherscan.io/tx/${tx.hash}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            {formatAddress(tx.hash)}
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-500">无交易记录</p>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-lg mb-4">请连接您的钱包以查看交易记录</p>
-            <p className="text-gray-500">连接钱包后，系统将自动获取您的稳定币交易记录</p>
-          </div>
-        )}
-      </div>
-    </main>
+                          } catch (error) {
+                            console.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
+                            // 作为后备方案，尝试直接除以1000000
+                            try {
+                              const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
+                              console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
+                              return fallbackAmount;
+                            } catch (e) {
+                              console.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
+                              return '格式错误';
+                            }
+                          }
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {tx.coin || 'USDC'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {tx.chain === 'solana' ? 'Solana' : 'Ethereum'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {tx.direction === 'in' ? formatAddress(tx.from) : formatAddress(tx.to)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <a 
+                          href={tx.chain === 'solana' 
+                            ? `https://solscan.io/tx/${tx.hash}` 
+                            : `https://etherscan.io/tx/${tx.hash}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          {formatAddress(tx.hash)}
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">无交易记录</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <p className="text-lg mb-4">请连接您的钱包以查看交易记录</p>
+          <p className="text-gray-500">连接钱包后，系统将自动获取您的稳定币交易记录</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <ClientEntry>
+      <HomeContent />
+    </ClientEntry>
   );
 }
