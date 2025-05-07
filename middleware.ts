@@ -1,5 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest } from 'next/server';
+import logger from './app/utils/logger';
 
 // 添加语言检测函数
 function getLocaleFromRequest(request: NextRequest) {
@@ -11,7 +12,7 @@ function getLocaleFromRequest(request: NextRequest) {
     .map(lang => lang.split(';')[0].trim().toLowerCase())
     .filter(Boolean);
   
-  console.log('检测到浏览器语言:', browserLocales);
+  logger.log('检测到浏览器语言:', browserLocales);
   
   // 判断是否优先使用中文
   const prefersChinese = browserLocales.some(locale => 

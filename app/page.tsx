@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { getUSDCTransactions, Transaction as ApiTransaction } from './components/AlchemyAPI';
 import WalletSelector from './components/WalletSelector';
 import ClientEntry from './client-entry';
+import logger from './utils/logger';
 
 // 使用从API导入的Transaction类型
 type Transaction = ApiTransaction;
@@ -43,7 +44,7 @@ function HomeContent() {
   // 监听链切换事件
   useEffect(() => {
     const handleChainChange = (event: CustomEvent<{ chain: ChainType, address: string }>) => {
-      console.log(`链切换事件: ${event.detail.chain}, 地址: ${event.detail.address}`);
+      logger.log(`链切换事件: ${event.detail.chain}, 地址: ${event.detail.address}`);
       setSelectedChain(event.detail.chain);
       fetchTransactions(event.detail.address, event.detail.chain);
     };
@@ -58,11 +59,11 @@ function HomeContent() {
   // 当用户连接钱包后获取交易数据
   useEffect(() => {
     if (isConnected && address) {
-      console.log(`用户连接了钱包: ${address}`);
+      logger.log(`用户连接了钱包: ${address}`);
       // 确定钱包类型 (添加更明确的日志)
       const isEthWallet = address.startsWith('0x');
       const chainType: ChainType = isEthWallet ? 'ethereum' : 'solana';
-      console.log(`钱包类型判断: ${isEthWallet ? '以太坊钱包' : 'Solana钱包'}`);
+      logger.log(`钱包类型判断: ${isEthWallet ? '以太坊钱包' : 'Solana钱包'}`);
       setSelectedChain(chainType);
       fetchTransactions(address, chainType);
     } else {
@@ -83,7 +84,7 @@ function HomeContent() {
     
     try {
       // 使用Alchemy API获取稳定币交易数据
-      console.log(`获取钱包地址 ${walletAddress} 的稳定币交易数据，链类型: ${chainType}`);
+      logger.log(`获取钱包地址 ${walletAddress} 的稳定币交易数据，链类型: ${chainType}`);
       
       // 获取交易数据（包括真实和模拟数据）
       const transactionsData = await getUSDCTransactions(
@@ -92,17 +93,17 @@ function HomeContent() {
       
       // 确保我们至少显示一些数据，即使没有真实交易
       if (transactionsData.length === 0) {
-        console.log("没有找到交易数据，使用模拟数据");
+        logger.log("没有找到交易数据，使用模拟数据");
         const mockData = createMockTransactions(walletAddress, chainType);
         setTransactions(mockData);
         calculateSummary(mockData);
       } else {
-        console.log(`找到 ${transactionsData.length} 条交易数据`);
+        logger.log(`找到 ${transactionsData.length} 条交易数据`);
         setTransactions(transactionsData);
         calculateSummary(transactionsData);
       }
     } catch (error) {
-      console.error('获取交易数据失败:', error);
+      logger.error('获取交易数据失败:', error);
       setError('获取交易数据失败，使用模拟数据');
       
       // 出错时使用模拟数据
@@ -182,27 +183,27 @@ function HomeContent() {
         let amount = 0;
         
         // 日志原始数据用于调试
-        console.log(`[交易汇总调试] 处理交易: ${tx.hash.substring(0, 10)}..., 链: ${tx.chain}, 硬币: ${tx.coin}, 方向: ${tx.direction}, 原始金额: ${tx.amount}`);
+        logger.log(`[交易汇总调试] 处理交易: ${tx.hash.substring(0, 10)}..., 链: ${tx.chain}, 硬币: ${tx.coin}, 方向: ${tx.direction}, 原始金额: ${tx.amount}`);
         
         // 根据金额格式选择处理方法
         if (tx.amount.includes('.')) {
           // 如果是带小数点的数字，直接用parseFloat
           amount = parseFloat(tx.amount);
-          console.log(`汇总计算 (小数): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}`);
+          logger.log(`汇总计算 (小数): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}`);
         } else {
           // 对于大整数金额 (按6位小数存储)
           try {
             amount = parseFloat(formatUnits(BigInt(tx.amount), 6));
-            console.log(`汇总计算 (BigInt): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 链=${tx.chain}`);
+            logger.log(`汇总计算 (BigInt): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 链=${tx.chain}`);
           } catch (err) {
             // 如果BigInt转换失败，回退到简单除法
             amount = parseInt(tx.amount) / 1000000;
-            console.log(`汇总计算 (回退): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 错误=${err instanceof Error ? err.message : 'unknown error'}`);
+            logger.log(`汇总计算 (回退): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 错误=${err instanceof Error ? err.message : 'unknown error'}`);
           }
         }
         
         if (isNaN(amount)) {
-          console.error(`金额解析为NaN: ${tx.amount}`);
+          logger.error(`金额解析为NaN: ${tx.amount}`);
           return acc; // 跳过此交易
         }
         
@@ -212,9 +213,9 @@ function HomeContent() {
           acc.totalOut += amount;
         }
         
-        console.log(`汇总更新: 收入=${acc.totalIn.toFixed(2)}, 支出=${acc.totalOut.toFixed(2)}`);
+        logger.log(`汇总更新: 收入=${acc.totalIn.toFixed(2)}, 支出=${acc.totalOut.toFixed(2)}`);
       } catch (error) {
-        console.error(`交易金额处理错误:`, tx.amount, error);
+        logger.error(`交易金额处理错误:`, tx.amount, error);
         // 发生错误时跳过此交易
       }
       
@@ -226,7 +227,7 @@ function HomeContent() {
     });
     
     summary.netAmount = summary.totalIn - summary.totalOut;
-    console.log(`最终汇总: 收入=${summary.totalIn.toFixed(2)}, 支出=${summary.totalOut.toFixed(2)}, 净额=${summary.netAmount.toFixed(2)}`);
+    logger.log(`最终汇总: 收入=${summary.totalIn.toFixed(2)}, 支出=${summary.totalOut.toFixed(2)}, 净额=${summary.netAmount.toFixed(2)}`);
     setSummary(summary);
   };
 
@@ -238,8 +239,8 @@ function HomeContent() {
     }
     
     try {
-      console.log('正在准备导出数据...');
-      console.log('当前交易数据:', transactions);
+      logger.log('正在准备导出数据...');
+      logger.log('当前交易数据:', transactions);
       
       // 准备导出数据
       const data = transactions.map(tx => ({
@@ -247,35 +248,35 @@ function HomeContent() {
         类型: tx.direction === 'in' ? '收入' : '支出',
         金额: (() => {
           try {
-            console.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
+            logger.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
             
             if (tx.amount.includes('.')) {
               const amount = parseFloat(tx.amount).toFixed(2);
-              console.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
+              logger.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
               return amount;
             } else {
               // 假设所有整数金额都是按照6位小数存储的
               try {
                 const formattedAmount = parseFloat(formatUnits(BigInt(tx.amount), 6)).toFixed(2);
-                console.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
+                logger.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
                 return formattedAmount;
               } catch (err) {
-                console.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
+                logger.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
                 // 作为后备方案，尝试直接除以1000000
                 const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
-                console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
+                logger.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
                 return fallbackAmount;
               }
             }
           } catch (error) {
-            console.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
+            logger.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
             // 作为后备方案，尝试直接除以1000000
             try {
               const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
-              console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
+              logger.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
               return fallbackAmount;
             } catch (e) {
-              console.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
+              logger.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
               return '格式错误';
             }
           }
@@ -285,10 +286,10 @@ function HomeContent() {
         交易哈希: tx.hash
       }));
       
-      console.log('转换为CSV格式...');
+      logger.log('转换为CSV格式...');
       // 转换为CSV
       const csv = Papa.unparse(data);
-      console.log('CSV数据生成成功，长度:', csv.length);
+      logger.log('CSV数据生成成功，长度:', csv.length);
       
       // 直接触发下载
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -299,17 +300,17 @@ function HomeContent() {
       link.setAttribute('href', url);
       link.setAttribute('download', `stablecoin_transactions_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
-      console.log('触发文件下载...');
+      logger.log('触发文件下载...');
       link.click();
       
       // 清理
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        console.log('CSV文件下载完成');
+        logger.log('CSV文件下载完成');
       }, 100);
     } catch (error) {
-      console.error('导出CSV时出错:', error);
+      logger.error('导出CSV时出错:', error);
       alert('导出CSV时出错，请查看控制台以获取详细信息');
     }
   };
@@ -414,35 +415,35 @@ function HomeContent() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${(() => {
                           try {
-                            console.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
+                            logger.log(`[AMOUNT_DEBUG] 处理显示金额: 交易=${tx.hash.substring(0, 8)}, 链=${tx.chain}, 币种=${tx.coin}, 方向=${tx.direction}, 原始金额=${tx.amount}`);
                             
                             if (tx.amount.includes('.')) {
                               const amount = parseFloat(tx.amount).toFixed(2);
-                              console.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
+                              logger.log(`格式化含小数点金额: ${tx.amount} → ${amount}`);
                               return amount;
                             } else {
                               // 假设所有整数金额都是按照6位小数存储的
                               try {
                                 const formattedAmount = parseFloat(formatUnits(BigInt(tx.amount), 6)).toFixed(2);
-                                console.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
+                                logger.log(`格式化整数金额: ${tx.amount} → ${formattedAmount}, 链: ${tx.chain}`);
                                 return formattedAmount;
                               } catch (err) {
-                                console.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
+                                logger.error(`BigInt转换失败 (${tx.chain}): ${tx.amount}`, err);
                                 // 作为后备方案，尝试直接除以1000000
                                 const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
-                                console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
+                                logger.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
                                 return fallbackAmount;
                               }
                             }
                           } catch (error) {
-                            console.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
+                            logger.error(`金额转换错误 (${tx.chain}): ${tx.amount}`, error);
                             // 作为后备方案，尝试直接除以1000000
                             try {
                               const fallbackAmount = (parseInt(tx.amount) / 1000000).toFixed(2);
-                              console.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
+                              logger.log(`使用后备方法格式化金额: ${tx.amount} → ${fallbackAmount}, 链: ${tx.chain}`);
                               return fallbackAmount;
                             } catch (e) {
-                              console.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
+                              logger.error(`后备金额转换也失败 (${tx.chain}): ${tx.amount}`, e);
                               return '格式错误';
                             }
                           }

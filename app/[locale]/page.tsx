@@ -12,6 +12,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // 导入所需模块
 import 'jspdf-font';
+import logger from '../utils/logger';
 
 // 使用从API导入的Transaction类型
 type Transaction = ApiTransaction;
@@ -59,7 +60,7 @@ export default function Home() {
   // 监听链切换事件
   useEffect(() => {
     const handleChainChange = (event: CustomEvent<{ chain: ChainType, address: string }>) => {
-      console.log(`链切换事件: ${event.detail.chain}, 地址: ${event.detail.address}`);
+      logger.log(`链切换事件: ${event.detail.chain}, 地址: ${event.detail.address}`);
       setSelectedChain(event.detail.chain);
       fetchTransactions(event.detail.address, event.detail.chain);
     };
@@ -74,11 +75,11 @@ export default function Home() {
   // 当用户连接钱包后获取交易数据
   useEffect(() => {
     if (isConnected && address) {
-      console.log(`用户连接了钱包: ${address}`);
+      logger.log(`用户连接了钱包: ${address}`);
       // 确定钱包类型 (添加更明确的日志)
       const isEthWallet = address.startsWith('0x');
       const chainType: ChainType = isEthWallet ? 'ethereum' : 'solana';
-      console.log(`钱包类型判断: ${isEthWallet ? '以太坊钱包' : 'Solana钱包'}`);
+      logger.log(`钱包类型判断: ${isEthWallet ? '以太坊钱包' : 'Solana钱包'}`);
       setSelectedChain(chainType);
       fetchTransactions(address, chainType);
     } else {
@@ -112,7 +113,7 @@ export default function Home() {
     
     try {
       // 使用Alchemy API获取稳定币交易数据
-      console.log(`获取钱包地址 ${walletAddress} 的稳定币交易数据，链类型: ${chainType}`);
+      logger.log(`获取钱包地址 ${walletAddress} 的稳定币交易数据，链类型: ${chainType}`);
       
       // 获取交易数据
       const transactionsData = await getUSDCTransactions(
@@ -120,7 +121,7 @@ export default function Home() {
       );
       
       if (transactionsData.length === 0) {
-        console.log("没有找到交易数据");
+        logger.log("没有找到交易数据");
         setTransactions([]);
         setSummary({
           totalIn: 0,
@@ -128,12 +129,12 @@ export default function Home() {
           netAmount: 0
         });
       } else {
-        console.log(`找到 ${transactionsData.length} 条交易数据`);
+        logger.log(`找到 ${transactionsData.length} 条交易数据`);
         setTransactions(transactionsData);
         calculateSummary(transactionsData);
       }
     } catch (error) {
-      console.error('获取交易数据失败:', error);
+      logger.error('获取交易数据失败:', error);
       setError(tError('generic'));
       setTransactions([]);
       setSummary({
@@ -154,22 +155,22 @@ export default function Home() {
         let amount = 0;
         
         // 日志原始数据用于调试
-        console.log(`[交易汇总调试] 处理交易: ${tx.hash.substring(0, 10)}..., 链: ${tx.chain}, 硬币: ${tx.coin}, 方向: ${tx.direction}, 原始金额: ${tx.amount}`);
+        logger.log(`[交易汇总调试] 处理交易: ${tx.hash.substring(0, 10)}..., 链: ${tx.chain}, 硬币: ${tx.coin}, 方向: ${tx.direction}, 原始金额: ${tx.amount}`);
         
         // 根据金额格式选择处理方法
         if (tx.amount.includes('.')) {
           // 如果是带小数点的数字，直接用parseFloat
           amount = parseFloat(tx.amount);
-          console.log(`汇总计算 (小数): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}`);
+          logger.log(`汇总计算 (小数): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}`);
         } else {
           // 对于大整数金额 (按6位小数存储)
           try {
             amount = parseFloat(formatUnits(BigInt(tx.amount), 6));
-            console.log(`汇总计算 (BigInt): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 链=${tx.chain}`);
+            logger.log(`汇总计算 (BigInt): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 链=${tx.chain}`);
           } catch (err) {
             // 如果BigInt转换失败，回退到简单除法
             amount = parseInt(tx.amount) / 1000000;
-            console.log(`汇总计算 (回退): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 错误=${err instanceof Error ? err.message : 'unknown error'}`);
+            logger.log(`汇总计算 (回退): ${tx.hash.substring(0, 8)} - 原始金额=${tx.amount}, 解析后=${amount}, 错误=${err instanceof Error ? err.message : 'unknown error'}`);
           }
         }
         
@@ -187,7 +188,7 @@ export default function Home() {
           };
         }
       } catch (err) {
-        console.error(`汇总计算出错:`, err, tx);
+        logger.error(`汇总计算出错:`, err, tx);
         return acc;
       }
     }, {
@@ -196,7 +197,7 @@ export default function Home() {
       netAmount: 0
     });
     
-    console.log('交易汇总:', summary);
+    logger.log('交易汇总:', summary);
     setSummary(summary);
   };
   
@@ -375,7 +376,7 @@ export default function Home() {
         
       pdf.save(`invoice_${invoiceNumber}.pdf`);
     } catch (error) {
-      console.error('生成PDF时出错:', error);
+      logger.error('生成PDF时出错:', error);
       
       // 备选方案：如果html2canvas方法失败，使用简单的表格导出
       try {
@@ -446,7 +447,7 @@ export default function Home() {
         
         pdf.save(`simple_invoice_${invoiceNumber}.pdf`);
       } catch (backupError) {
-        console.error('备选PDF生成也失败:', backupError);
+        logger.error('备选PDF生成也失败:', backupError);
         alert('无法生成PDF，请稍后再试');
       }
     }

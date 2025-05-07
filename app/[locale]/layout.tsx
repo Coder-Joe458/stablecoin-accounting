@@ -5,7 +5,7 @@ import ClientEntry from "../client-entry";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import LanguageSwitcher from "../components/LanguageSwitcher";
-
+import logger from "../utils/logger";
 const inter = Inter({ subsets: ["latin"] });
 
 // 定义支持的语言
@@ -66,7 +66,7 @@ export default async function RootLayout(props: RootLayoutProps) {
       </html>
     );
   } catch (error) {
-    console.error('Error in RootLayout:', error);
+    logger.error('Error in RootLayout:', error);
     
     // 出错时使用默认值
     const fallbackMessages = await getMessages({ locale: defaultLocale });

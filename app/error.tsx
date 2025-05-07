@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import logger from './utils/logger';
 
 export default function Error({
   error,
@@ -11,7 +12,7 @@ export default function Error({
 }) {
   useEffect(() => {
     // 在开发环境中输出错误到控制台
-    console.error('Application error:', error);
+    logger.error('Application error:', error);
   }, [error]);
 
   return (

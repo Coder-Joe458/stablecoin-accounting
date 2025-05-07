@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
+import logger from '../utils/logger';
 
 interface TransactionFormProps {
   initialData?: {
@@ -48,12 +49,12 @@ export default function TransactionForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  console.log('TransactionForm rendered with initialData:', initialData);
+  logger.log('TransactionForm rendered with initialData:', initialData);
 
   // Initialize form with data if editing
   useEffect(() => {
     if (initialData) {
-      console.log('Setting form data from initialData:', initialData);
+      logger.log('Setting form data from initialData:', initialData);
       setFormData({
         ...defaultFormData,
         ...initialData,
@@ -104,16 +105,16 @@ export default function TransactionForm({
       [name]: value
     }));
     
-    console.log(`Form field ${name} changed to:`, value);
+    logger.log(`Form field ${name} changed to:`, value);
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
+    logger.log('Form submitted with data:', formData);
     
     if (!validateForm()) {
-      console.log('Form validation failed with errors:', errors);
+      logger.log('Form validation failed with errors:', errors);
       return;
     }
     
@@ -126,10 +127,10 @@ export default function TransactionForm({
         amount: formData.amount // You might want to convert this to the appropriate format for your backend
       };
       
-      console.log('Submitting transaction with data:', submissionData);
+      logger.log('Submitting transaction with data:', submissionData);
       await onSubmit(submissionData);
     } catch (error) {
-      console.error('Error submitting transaction:', error);
+      logger.error('Error submitting transaction:', error);
       setErrors(prev => ({
         ...prev,
         form: 'Failed to submit transaction. Please try again.'
@@ -145,10 +146,10 @@ export default function TransactionForm({
     
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       try {
-        console.log('Deleting transaction with ID:', formData.id);
+        logger.log('Deleting transaction with ID:', formData.id);
         await onDelete(formData.id);
       } catch (error) {
-        console.error('Error deleting transaction:', error);
+        logger.error('Error deleting transaction:', error);
         setErrors(prev => ({
           ...prev,
           form: 'Failed to delete transaction. Please try again.'
@@ -159,7 +160,7 @@ export default function TransactionForm({
 
   // Handle cancel
   const handleCancel = () => {
-    console.log('Form cancelled');
+    logger.log('Form cancelled');
     if (onCancel) onCancel();
   };
 

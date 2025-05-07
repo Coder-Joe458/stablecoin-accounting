@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin('./app/i18n/request.ts');
 const nextConfig: NextConfig = {
   /* config options here */
   env: {
-    // 配置默认环境变量
+    // 配置默认环境变量，确保在生产环境中禁用所有日志
     NEXT_PUBLIC_ENABLE_LOGS: process.env.NEXT_PUBLIC_ENABLE_LOGS || 'false',
     NEXT_PUBLIC_ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG || 'false',
     NEXT_PUBLIC_DISABLE_WARNINGS: process.env.NEXT_PUBLIC_DISABLE_WARNINGS || 'false'
@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
   compiler: {
     // 移除 React 的 SSR 特定代码
     reactRemoveProperties: process.env.NODE_ENV === 'production',
+    // 在生产环境中删除所有的console.*调用
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error'], // 保留console.error以便跟踪错误
+    } : false,
   },
   
   // 禁用静态HTML导出功能，使用Vercel动态渲染
@@ -68,6 +72,14 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+  
+  // 确保将关键的环境变量传递给客户端
+  publicRuntimeConfig: {
+    // 这些值将在客户端可用
+    NEXT_PUBLIC_ENABLE_LOGS: process.env.NEXT_PUBLIC_ENABLE_LOGS || 'false',
+    NEXT_PUBLIC_ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG || 'false',
+    NEXT_PUBLIC_DISABLE_WARNINGS: process.env.NEXT_PUBLIC_DISABLE_WARNINGS || 'false',
   },
 };
 
