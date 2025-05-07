@@ -193,7 +193,7 @@ async function getSolanaTransactions(
     // 使用重试逻辑处理API限流
     while (retryCount <= maxRetries) {
       try {
-        console.log(`[DEBUG] 发送Solana getSignaturesForAddress请求 - 尝试 #${retryCount + 1}`);
+        logger.debug(`发送Solana getSignaturesForAddress请求 - 尝试 #${retryCount + 1}`);
         // 使用Solana RPC API获取交易签名
         const signaturesResponse = await fetch(baseUrl, {
           method: 'POST',
@@ -214,8 +214,8 @@ async function getSolanaTransactions(
         });
 
         signaturesData = await signaturesResponse.json();
-        console.log("收到Solana签名API响应:", signaturesData);
-        console.log(`[DEBUG] 收到签名响应 - 状态码: ${signaturesResponse.status}, 数据长度: ${JSON.stringify(signaturesData).length}`);
+        logger.log("收到Solana签名API响应:", signaturesData);
+        logger.debug(`收到签名响应 - 状态码: ${signaturesResponse.status}, 数据长度: ${JSON.stringify(signaturesData).length}`);
         
         // 记录API使用情况，即使请求成功
         logApiUsage(signaturesResponse, 'Solana-Signatures');
@@ -225,9 +225,9 @@ async function getSolanaTransactions(
           logRateLimitInfo(signaturesResponse, signaturesData, 'Solana-Signatures');
           retryCount++;
           const backoffTime = exponentialBackoff(retryCount);
-          console.log(`遇到API限流错误(429)，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
-          console.log(`[DEBUG] API限流 - 错误码: ${signaturesData.error?.code}, 消息: ${signaturesData.error?.message}`);
-          console.error(`获取Solana签名失败: \n{code: ${signaturesData.error?.code}, message: '${signaturesData.error?.message || "Your app has been rate-limited due to unusually high global traffic. Consider upgrading your plan to have guaranteed throughput even in times of extraordinary request traffic."}'}`);
+          logger.log(`遇到API限流错误(429)，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
+          logger.debug(`API限流 - 错误码: ${signaturesData.error?.code}, 消息: ${signaturesData.error?.message}`);
+          logger.error(`获取Solana签名失败: \n{code: ${signaturesData.error?.code}, message: '${signaturesData.error?.message || "Your app has been rate-limited due to unusually high global traffic. Consider upgrading your plan to have guaranteed throughput even in times of extraordinary request traffic."}'}`);
           await delay(backoffTime); // 使用指数级增加等待时间
           continue;
         }
@@ -238,23 +238,23 @@ async function getSolanaTransactions(
         // 批量获取交易详情
         const transactions: Transaction[] = [];
         
-        console.log(`获取到Solana交易签名列表，共${signatures.length}个交易`);
-        console.log(`[DEBUG] 获取到签名列表 - 数量: ${signatures.length}, 第一个签名: ${signatures[0]}`);
+        logger.log(`获取到Solana交易签名列表，共${signatures.length}个交易`);
+        logger.debug(`获取到签名列表 - 数量: ${signatures.length}, 第一个签名: ${signatures[0]}`);
 
         // 由于可能有大量交易，我们分批获取详情
         const batchSize = 3; // 减少批处理大小以防止触发限流
         for (let i = 0; i < Math.min(signatures.length, limit); i += batchSize) {
           const batch = signatures.slice(i, i + batchSize);
           
-          console.log(`获取Solana交易详情批次 ${i / batchSize + 1}，共${batch.length}个交易`);
-          console.log(`[DEBUG] 开始批次 ${i / batchSize + 1} - 批次大小: ${batch.length}, 起始索引: ${i}`);
+          logger.log(`获取Solana交易详情批次 ${i / batchSize + 1}，共${batch.length}个交易`);
+          logger.debug(`开始批次 ${i / batchSize + 1} - 批次大小: ${batch.length}, 起始索引: ${i}`);
           
           // 在处理批次之前增加延迟，降低请求频率
           await delay(1000 + Math.random() * 1000);
           
           // 处理批次中的每个签名
           for (const signature of batch) {
-            console.log(`[DEBUG] 处理签名: ${signature.substring(0, 16)}...`);
+            logger.debug(`处理签名: ${signature.substring(0, 16)}...`);
             // 获取每个交易的详情
             let txDetails;
             retryCount = 0;
@@ -266,7 +266,7 @@ async function getSolanaTransactions(
                   await delay(1500 + Math.random() * 1500);
                 }
                 
-                console.log(`[DEBUG] 发送getTransaction请求 - 签名: ${signature.substring(0, 16)}..., 尝试 #${retryCount + 1}`);
+                logger.debug(`发送getTransaction请求 - 签名: ${signature.substring(0, 16)}..., 尝试 #${retryCount + 1}`);
                 const txDetailsResponse = await fetch(baseUrl, {
                   method: 'POST',
                   headers: {
@@ -287,7 +287,7 @@ async function getSolanaTransactions(
                 });
 
                 txDetails = await txDetailsResponse.json();
-                console.log(`[DEBUG] 收到交易详情响应 - 状态码: ${txDetailsResponse.status}, 数据大小: ${JSON.stringify(txDetails).length.toLocaleString()} 字节`);
+                logger.debug(`收到交易详情响应 - 状态码: ${txDetailsResponse.status}, 数据大小: ${JSON.stringify(txDetails).length.toLocaleString()} 字节`);
                 
                 // 记录API使用情况，即使请求成功
                 logApiUsage(txDetailsResponse, 'Solana-Transaction');
@@ -297,38 +297,38 @@ async function getSolanaTransactions(
                   logRateLimitInfo(txDetailsResponse, txDetails, 'Solana-Transaction');
                   retryCount++;
                   const backoffTime = exponentialBackoff(retryCount);
-                  console.log(`遇到API限流错误(429)，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
-                  console.log(`[DEBUG] 交易详情限流 - 错误码: ${txDetails.error?.code}, 消息: ${txDetails.error?.message}`);
-                  console.error(`获取Solana签名失败: \n{code: ${txDetails.error?.code}, message: '${txDetails.error?.message || "Your app has been rate-limited due to unusually high global traffic. Consider upgrading your plan to have guaranteed throughput even in times of extraordinary request traffic."}'}`);
+                  logger.log(`遇到API限流错误(429)，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
+                  logger.debug(`交易详情限流 - 错误码: ${txDetails.error?.code}, 消息: ${txDetails.error?.message}`);
+                  logger.error(`获取Solana签名失败: \n{code: ${txDetails.error?.code}, message: '${txDetails.error?.message || "Your app has been rate-limited due to unusually high global traffic. Consider upgrading your plan to have guaranteed throughput even in times of extraordinary request traffic."}'}`);
                   await delay(backoffTime);
                   continue;
                 }
                 
-                console.log(`获取到交易详情 [${signature}]:`);
+                logger.log(`获取到交易详情 [${signature}]:`);
                 
                 // 处理每个交易
                 if (!txDetails.error && txDetails.result) {
                   try {
                     const tx = txDetails.result;
-                    console.log(`[DEBUG] 交易详情有效 - 签名: ${signature.substring(0, 16)}..., 区块时间: ${tx.blockTime}`);
+                    logger.debug(`交易详情有效 - 签名: ${signature.substring(0, 16)}..., 区块时间: ${tx.blockTime}`);
                     
                     // 检查是否存在meta和postTokenBalances
                     if (!tx.meta || !tx.meta.postTokenBalances || !tx.meta.preTokenBalances) {
-                      console.log(`跳过交易 [${signature}]: 缺少token余额信息`);
-                      console.log(`[DEBUG] 缺少Token余额 - meta存在: ${!!tx.meta}, postTokenBalances存在: ${!!tx.meta?.postTokenBalances}, preTokenBalances存在: ${!!tx.meta?.preTokenBalances}`);
+                      logger.log(`跳过交易 [${signature}]: 缺少token余额信息`);
+                      logger.debug(`缺少Token余额 - meta存在: ${!!tx.meta}, postTokenBalances存在: ${!!tx.meta?.postTokenBalances}, preTokenBalances存在: ${!!tx.meta?.preTokenBalances}`);
                       continue;
                     }
 
                     // Log transaction structure for debugging
-                    console.log(`[DEBUG] 交易结构 - meta字段:`, Object.keys(tx.meta));
-                    console.log(`[DEBUG] 交易结构 - transaction字段:`, Object.keys(tx.transaction));
-                    console.log(`[DEBUG] 交易结构 - transaction.message字段:`, Object.keys(tx.transaction.message));
+                    logger.debug(`交易结构 - meta字段:`, Object.keys(tx.meta));
+                    logger.debug(`交易结构 - transaction字段:`, Object.keys(tx.transaction));
+                    logger.debug(`交易结构 - transaction.message字段:`, Object.keys(tx.transaction.message));
                     
                     // 当前我们只关注USDC和USDT交易
                     const tokenBalances = tx.meta.postTokenBalances;
                     const preTokenBalances = tx.meta.preTokenBalances;
-                    console.log(`交易 [${signature}] token数量: ${tokenBalances.length}`);
-                    console.log(`[DEBUG] Token余额 - Post余额数: ${tokenBalances.length}, Pre余额数: ${preTokenBalances.length}`);
+                    logger.log(`交易 [${signature}] token数量: ${tokenBalances.length}`);
+                    logger.debug(`Token余额 - Post余额数: ${tokenBalances.length}, Pre余额数: ${preTokenBalances.length}`);
                     
                     // 检查是否有USDC或USDT token
                     let isStablecoinTx = false;
@@ -338,15 +338,15 @@ async function getSolanaTransactions(
                     
                     for (const balance of tokenBalances) {
                       const mintAddress = balance.mint;
-                      console.log(`检查token: ${mintAddress}`);
-                      console.log(`[DEBUG] 检查Token - Mint地址: ${mintAddress}, 账户索引: ${balance.accountIndex}`);
+                      logger.log(`检查token: ${mintAddress}`);
+                      logger.debug(`检查Token - Mint地址: ${mintAddress}, 账户索引: ${balance.accountIndex}`);
                       
                       // USDC和USDT在Solana上的Mint地址
                       if (mintAddress === STABLECOIN_CONTRACTS.SOLANA.USDC || mintAddress === STABLECOIN_CONTRACTS.SOLANA.USDT) {
                         isStablecoinTx = true;
                         stablecoinType = mintAddress === STABLECOIN_CONTRACTS.SOLANA.USDC ? 'USDC' : 'USDT';
-                        console.log(`找到稳定币交易: ${stablecoinType}`);
-                        console.log(`[DEBUG] 找到稳定币 - 类型: ${stablecoinType}, Mint地址: ${mintAddress}`);
+                        logger.log(`找到稳定币交易: ${stablecoinType}`);
+                        logger.debug(`找到稳定币 - 类型: ${stablecoinType}, Mint地址: ${mintAddress}`);
                         
                         // 找到对应的preTokenBalance
                         const preBalance = preTokenBalances.find(
@@ -357,28 +357,28 @@ async function getSolanaTransactions(
                           const preAmount = parseInt(preBalance.uiTokenAmount?.amount || '0');
                           const postAmount = parseInt(balance.uiTokenAmount?.amount || '0');
                           const decimals = balance.uiTokenAmount?.decimals || 6;
-                          console.log(`预余额: ${preAmount}, 后余额: ${postAmount}`);
-                          console.log(`[DEBUG] 余额比较 - 预余额: ${preAmount}, 后余额: ${postAmount}, 小数位: ${decimals}`);
+                          logger.log(`预余额: ${preAmount}, 后余额: ${postAmount}`);
+                          logger.debug(`余额比较 - 预余额: ${preAmount}, 后余额: ${postAmount}, 小数位: ${decimals}`);
                           
                           // 计算金额变化并确定方向
                           const delta = postAmount - preAmount;
-                          console.log(`[DEBUG] 计算余额差额 - 差额: ${delta}, 原始值`);
+                          logger.debug(`计算余额差额 - 差额: ${delta}, 原始值`);
                           
                           if (delta > 0) {
                             amount = delta / (10 ** decimals);
                             direction = 'in';
-                            console.log(`收到金额: ${amount}`);
-                            console.log(`[DEBUG] 收到金额 - 金额: ${amount}, 原始Delta: ${delta}, 小数位: ${decimals}`);
+                            logger.log(`收到金额: ${amount}`);
+                            logger.debug(`收到金额 - 金额: ${amount}, 原始Delta: ${delta}, 小数位: ${decimals}`);
                           } else if (delta < 0) {
                             amount = Math.abs(delta) / (10 ** decimals);
                             direction = 'out';
-                            console.log(`发送金额: ${amount}`);
-                            console.log(`[DEBUG] 发送金额 - 金额: ${amount}, 原始Delta: ${delta}, 小数位: ${decimals}`);
+                            logger.log(`发送金额: ${amount}`);
+                            logger.debug(`发送金额 - 金额: ${amount}, 原始Delta: ${delta}, 小数位: ${decimals}`);
                           } else {
-                            console.log(`[DEBUG] 余额无变化 - Delta: ${delta}`);
+                            logger.debug(`余额无变化 - Delta: ${delta}`);
                           }
                         } else {
-                          console.log(`[DEBUG] 未找到匹配的预余额 - 账户索引: ${balance.accountIndex}`);
+                          logger.debug(`未找到匹配的预余额 - 账户索引: ${balance.accountIndex}`);
                         }
                         break; // 找到一个稳定币交易就跳出
                       }
@@ -386,17 +386,17 @@ async function getSolanaTransactions(
                     
                     if (isStablecoinTx && amount > 0) {
                       const scaledAmount = Math.round(amount * 1000000).toString();
-                      console.log(`添加有效交易 [${signature}]: 方向=${direction}, 金额=${amount}, 转换后金额=${scaledAmount}`);
-                      console.log(`[DEBUG] 添加交易 - 签名: ${signature.substring(0, 16)}..., 类型: ${stablecoinType}, 方向: ${direction}, 原始金额: ${amount}, 格式化金额: ${scaledAmount}`);
+                      logger.log(`添加有效交易 [${signature}]: 方向=${direction}, 金额=${amount}, 转换后金额=${scaledAmount}`);
+                      logger.debug(`添加交易 - 签名: ${signature.substring(0, 16)}..., 类型: ${stablecoinType}, 方向: ${direction}, 原始金额: ${amount}, 格式化金额: ${scaledAmount}`);
                       
                       // Determine the transaction addresses correctly based on direction
                       let fromAddress = '';
                       let toAddress = '';
                       
                       // Log all account keys in the transaction for debugging
-                      console.log(`[DEBUG] 交易账户列表 - 总账户数: ${tx.transaction.message.accountKeys.length}`);
+                      logger.debug(`交易账户列表 - 总账户数: ${tx.transaction.message.accountKeys.length}`);
                       tx.transaction.message.accountKeys.forEach((account: { pubkey: string; signer: boolean; writable: boolean }, index: number) => {
-                        console.log(`[DEBUG] 账户[${index}]: ${account.pubkey}, 是否签名者: ${account.signer}, 是否可写: ${account.writable}`);
+                        logger.debug(`账户[${index}]: ${account.pubkey}, 是否签名者: ${account.signer}, 是否可写: ${account.writable}`);
                       });
                       
                       // Find the token program accounts
@@ -411,35 +411,35 @@ async function getSolanaTransactions(
                         };
                       });
                       
-                      console.log(`[DEBUG] Token账户列表 - 总数: ${tokenAccounts.length}`);
+                      logger.debug(`Token账户列表 - 总数: ${tokenAccounts.length}`);
                       tokenAccounts.forEach((account: any, index: number) => {
-                        console.log(`[DEBUG] Token账户[${index}]: ${account.pubkey}, 索引: ${account.accountIndex}, 所有者: ${account.owner || '未知'}`);
+                        logger.debug(`Token账户[${index}]: ${account.pubkey}, 索引: ${account.accountIndex}, 所有者: ${account.owner || '未知'}`);
                         // Log more details about each token balance for debugging
                         const originalBalance = tx.meta.postTokenBalances[index];
-                        console.log(`[DEBUG] 原始Token余额[${index}]:`, originalBalance);
+                        logger.debug(`原始Token余额[${index}]:`, originalBalance);
                       });
                       
                       // Check for token instructions to find counterparty
                       let counterpartyFromInstruction = null;
                       if (tx.transaction.message.instructions) {
-                        console.log(`[DEBUG] 指令列表 - 总数: ${tx.transaction.message.instructions.length}`);
+                        logger.debug(`指令列表 - 总数: ${tx.transaction.message.instructions.length}`);
                         
                         // Look through transaction instructions for token transfers
                         tx.transaction.message.instructions.forEach((instruction: any, idx: number) => {
-                          console.log(`[DEBUG] 指令[${idx}] 程序ID:`, instruction.programId);
+                          logger.debug(`指令[${idx}] 程序ID:`, instruction.programId);
                           
                           // Check if this is a token program instruction (transfers, etc)
                           if (instruction.parsed && instruction.parsed.type === 'transfer') {
-                            console.log(`[DEBUG] 发现Token转账指令:`, instruction.parsed);
+                            logger.debug(`发现Token转账指令:`, instruction.parsed);
                             
                             if (instruction.parsed.info) {
                               const info = instruction.parsed.info;
                               if (direction === 'in' && info.source && info.source !== walletAddress) {
                                 counterpartyFromInstruction = info.source;
-                                console.log(`[DEBUG] 从指令中找到发送方: ${counterpartyFromInstruction}`);
+                                logger.debug(`从指令中找到发送方: ${counterpartyFromInstruction}`);
                               } else if (direction === 'out' && info.destination && info.destination !== walletAddress) {
                                 counterpartyFromInstruction = info.destination;
-                                console.log(`[DEBUG] 从指令中找到接收方: ${counterpartyFromInstruction}`);
+                                logger.debug(`从指令中找到接收方: ${counterpartyFromInstruction}`);
                               }
                             }
                           }
@@ -455,7 +455,7 @@ async function getSolanaTransactions(
                         // First try using the instruction data if available
                         if (counterpartyFromInstruction) {
                           fromAddress = counterpartyFromInstruction;
-                          console.log(`[DEBUG] 使用指令中的转入方地址: ${fromAddress}`);
+                          logger.debug(`使用指令中的转入方地址: ${fromAddress}`);
                         } else {
                           // Look for a token account not owned by the wallet address
                           const counterpartyAccount = tokenAccounts.find((acct: any) => 
@@ -464,7 +464,7 @@ async function getSolanaTransactions(
                           
                           if (counterpartyAccount && counterpartyAccount.owner) {
                             fromAddress = counterpartyAccount.owner;
-                            console.log(`[DEBUG] 找到转入方地址: ${fromAddress}`);
+                            logger.debug(`找到转入方地址: ${fromAddress}`);
                           } else {
                             // Fallback: Use the first signer that isn't the wallet address
                             const firstNonWalletSigner = tx.transaction.message.accountKeys.find(
@@ -472,18 +472,18 @@ async function getSolanaTransactions(
                             );
                             
                             fromAddress = firstNonWalletSigner ? firstNonWalletSigner.pubkey : tx.transaction.message.accountKeys[0].pubkey;
-                            console.log(`[DEBUG] 使用备选转入方地址: ${fromAddress}`);
+                            logger.debug(`使用备选转入方地址: ${fromAddress}`);
                           }
                         }
                         
                         toAddress = walletAddress;
-                        console.log(`[DEBUG] 收款交易 - FROM=${fromAddress} TO=${toAddress}`);
+                        logger.debug(`收款交易 - FROM=${fromAddress} TO=${toAddress}`);
                       } else {
                         // For outgoing, the "to" should be the counterparty
                         // First try using the instruction data if available
                         if (counterpartyFromInstruction) {
                           toAddress = counterpartyFromInstruction;
-                          console.log(`[DEBUG] 使用指令中的转出方地址: ${toAddress}`);
+                          logger.debug(`使用指令中的转出方地址: ${toAddress}`);
                         } else {
                           // Look for a token account not owned by the wallet address
                           const counterpartyAccount = tokenAccounts.find((acct: any) => 
@@ -492,7 +492,7 @@ async function getSolanaTransactions(
                           
                           if (counterpartyAccount && counterpartyAccount.owner) {
                             toAddress = counterpartyAccount.owner;
-                            console.log(`[DEBUG] 找到转出方地址: ${toAddress}`);
+                            logger.debug(`找到转出方地址: ${toAddress}`);
                           } else {
                             // Fallback: use a writable account that isn't the wallet address
                             const firstNonWalletWritable = tx.transaction.message.accountKeys.find(
@@ -500,12 +500,12 @@ async function getSolanaTransactions(
                             );
                             
                             toAddress = firstNonWalletWritable ? firstNonWalletWritable.pubkey : tx.transaction.message.accountKeys[0].pubkey;
-                            console.log(`[DEBUG] 使用备选转出方地址: ${toAddress}`);
+                            logger.debug(`使用备选转出方地址: ${toAddress}`);
                           }
                         }
                         
                         fromAddress = walletAddress;
-                        console.log(`[DEBUG] 付款交易 - FROM=${fromAddress} TO=${toAddress}`);
+                        logger.debug(`付款交易 - FROM=${fromAddress} TO=${toAddress}`);
                       }
                       
                       transactions.push({
@@ -520,80 +520,80 @@ async function getSolanaTransactions(
                         chain: 'solana'
                       });
                     } else {
-                      console.log(`跳过交易 [${signature}]: 非稳定币交易或金额为0`);
-                      console.log(`[DEBUG] 跳过交易 - 是稳定币: ${isStablecoinTx}, 金额: ${amount}, 签名: ${signature.substring(0, 16)}...`);
+                      logger.log(`跳过交易 [${signature}]: 非稳定币交易或金额为0`);
+                      logger.debug(`跳过交易 - 是稳定币: ${isStablecoinTx}, 金额: ${amount}, 签名: ${signature.substring(0, 16)}...`);
                     }
                   } catch (err) {
-                    console.error(`解析Solana交易 [${signature}] 失败:`, err);
-                    console.log(`[DEBUG] 解析交易失败 - 签名: ${signature.substring(0, 16)}..., 错误: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+                    logger.error(`解析Solana交易 [${signature}] 失败:`, err);
+                    logger.debug(`解析交易失败 - 签名: ${signature.substring(0, 16)}..., 错误: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
                   }
                 } else {
-                  console.error(`获取交易 [${signature}] 详情失败:`, txDetails.error);
-                  console.log(`[DEBUG] 交易详情无效 - 签名: ${signature.substring(0, 16)}..., 错误: ${txDetails.error ? JSON.stringify(txDetails.error) : '未知错误'}`);
+                  logger.error(`获取交易 [${signature}] 详情失败:`, txDetails.error);
+                  logger.debug(`交易详情无效 - 签名: ${signature.substring(0, 16)}..., 错误: ${txDetails.error ? JSON.stringify(txDetails.error) : '未知错误'}`);
                 }
                 
                 // 成功获取交易详情后跳出重试循环
                 break;
               } catch (txError) {
-                console.error(`获取交易 [${signature}] 详情时出错:`, txError);
-                console.log(`[DEBUG] 交易详情请求错误 - 签名: ${signature.substring(0, 16)}..., 错误: ${txError instanceof Error ? txError.message : JSON.stringify(txError)}`);
+                logger.error(`获取交易 [${signature}] 详情时出错:`, txError);
+                logger.debug(`交易详情请求错误 - 签名: ${signature.substring(0, 16)}..., 错误: ${txError instanceof Error ? txError.message : JSON.stringify(txError)}`);
                 
                 // 如果已达到最大重试次数，跳过此交易
                 if (retryCount >= maxRetries) {
-                  console.log(`已达到最大重试次数 (${maxRetries})，跳过交易 [${signature}]`);
+                  logger.log(`已达到最大重试次数 (${maxRetries})，跳过交易 [${signature}]`);
                   break;
                 }
                 
                 retryCount++;
                 const backoffTime = exponentialBackoff(retryCount);
-                console.log(`获取交易详情失败，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
+                logger.log(`获取交易详情失败，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
                 await delay(backoffTime);
               }
             } // 结束getTransaction的重试循环
           } // 结束批次中每个签名的处理
         } // 结束批次处理
         
-        console.log(`处理完成，找到${transactions.length}个有效稳定币交易`);
-        console.log(`[DEBUG] 处理完成 - 找到交易数: ${transactions.length}, 查询的签名总数: ${signatures.length}`);
+        logger.log(`处理完成，找到${transactions.length}个有效稳定币交易`);
+        logger.debug(`处理完成 - 找到交易数: ${transactions.length}, 查询的签名总数: ${signatures.length}`);
         
         // 按时间排序
         transactions.sort((a, b) => b.timestamp - a.timestamp);
-        console.log(`[DEBUG] 交易已排序 - 最早交易时间: ${new Date(transactions[transactions.length-1]?.timestamp * 1000).toISOString()}, 最新交易时间: ${new Date(transactions[0]?.timestamp * 1000).toISOString()}`);
+        logger.debug(`交易已排序 - 最早交易时间: ${new Date(transactions[transactions.length-1]?.timestamp * 1000).toISOString()}, 最新交易时间: ${new Date(transactions[0]?.timestamp * 1000).toISOString()}`);
         
         // 如果没有找到交易，返回空数组
         if (transactions.length === 0) {
-          console.log("未找到Solana稳定币交易");
-          console.log(`[DEBUG] 未找到交易 - 返回空数组`);
+          logger.log("未找到Solana稳定币交易");
+          logger.debug(`未找到交易 - 返回空数组`);
           return [];
         }
         
-        console.log(`总共找到 ${transactions.length} 条有效的Solana稳定币交易`);
-        console.log(`[DEBUG] 返回交易 - 总数: ${transactions.length}, 钱包地址: ${walletAddress}`);
+        logger.log(`总共找到 ${transactions.length} 条有效的Solana稳定币交易`);
+        logger.debug(`返回交易 - 总数: ${transactions.length}, 钱包地址: ${walletAddress}`);
         
         return transactions;
       } catch (error) {
-        console.error('获取Solana交易失败:', error);
-        console.log(`[DEBUG] 获取交易异常 - 错误: ${error instanceof Error ? `${error.name}: ${error.message}` : JSON.stringify(error)}`);
+        logger.error('获取Solana交易失败:', error);
+        logger.debug(`获取交易异常 - 错误: ${error instanceof Error ? `${error.name}: ${error.message}` : JSON.stringify(error)}`);
         
         // 如果已达到最大重试次数，返回空数组
         if (retryCount >= maxRetries) {
-          console.log(`获取签名已达到最大重试次数 (${maxRetries})`);
+          logger.log(`获取签名已达到最大重试次数 (${maxRetries})`);
           return [];
         }
         
         retryCount++;
         const backoffTime = exponentialBackoff(retryCount);
-        console.log(`获取Solana交易签名失败，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
+        logger.log(`获取Solana交易签名失败，第 ${retryCount} 次重试，等待 ${backoffTime/1000} 秒...`);
         await delay(backoffTime);
       }
     }
     
     // 如果所有重试都失败，返回空数组
-    console.log('所有重试获取Solana交易签名都失败');
+    logger.log('所有重试获取Solana交易签名都失败');
     return [];
   } catch (error) {
-    console.error('获取Solana交易失败:', error);
-    console.log(`[DEBUG] 获取交易异常 - 错误: ${error instanceof Error ? `${error.name}: ${error.message}` : JSON.stringify(error)}`);
+    logger.error('获取Solana交易失败:', error);
+    logger.debug(`获取交易异常 - 错误: ${error instanceof Error ? `${error.name}: ${error.message}` : JSON.stringify(error)}`);
     // 出错时返回空数组
     return [];
   }

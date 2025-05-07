@@ -5,14 +5,14 @@ const config = {
   
   // 日志配置
   logging: {
-    // 在生产环境中禁用普通日志，在开发环境中启用
-    enableLogs: process.env.NODE_ENV !== 'production',
+    // 使用环境变量控制普通日志输出
+    enableLogs: process.env.NEXT_PUBLIC_ENABLE_LOGS === 'true',
     
-    // 在生产环境中禁用调试日志
-    enableDebug: process.env.NODE_ENV !== 'production',
+    // 使用环境变量控制调试日志输出
+    enableDebug: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
     
-    // 始终显示警告和错误
-    disableWarnings: false
+    // 使用环境变量控制警告输出
+    disableWarnings: process.env.NEXT_PUBLIC_DISABLE_WARNINGS === 'true'
   },
   
   // API配置
