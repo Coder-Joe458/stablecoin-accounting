@@ -1,68 +1,68 @@
-# 稳定币记账系统
+# Stablecoin Accounting System
 
-一个简单易用的稳定币交易记录管理系统，当前支持Solana上的USDC。
+A simple and user-friendly stablecoin transaction management system, currently supporting USDC on Solana.
 
-## 功能特点
+## Features
 
-- 连接Solana钱包查看USDC交易记录
-- 查看交易统计信息（收入、支出、净额）
-- 生成交易PDF发票
-- 支持中英文双语界面
-- 响应式设计，适配移动端和桌面端
+- Connect Solana wallet to view USDC transaction history
+- View transaction statistics (income, expenses, net balance)
+- Generate transaction PDF invoices
+- Bilingual interface support (English/Chinese)
+- Responsive design for mobile and desktop
 
-## 开发环境
+## Development Environment
 
 - Node.js 16+
 - Next.js 15
-- RainbowKit 钱包连接
-- TailwindCSS 样式
+- RainbowKit wallet connection
+- TailwindCSS styling
 - TypeScript
 
-## 本地开发
+## Local Development
 
-1. 克隆代码库
+1. Clone the repository
 
 ```bash
 git clone https://github.com/yourusername/stablecoin-accounting.git
 cd stablecoin-accounting
 ```
 
-2. 安装依赖
+2. Install dependencies
 
 ```bash
 npm install
 ```
 
-3. 启动开发服务器
+3. Start the development server
 
 ```bash
 npm run dev
 ```
 
-4. 打开浏览器访问 http://localhost:3000
+4. Open your browser and visit http://localhost:3000
 
-## 生产环境构建
+## Production Build
 
 ```bash
 npm run build
 npm start
 ```
 
-## 部署到 Vercel
+## Deploy to Vercel
 
-本项目可以轻松部署到 Vercel 平台：
+This project can be easily deployed to Vercel:
 
-1. 将项目推送到 GitHub 代码库
-2. 在 Vercel 中导入该项目
-3. 设置以下环境变量：
-   - `NEXT_PUBLIC_ALCHEMY_API_KEY`: 您的 Alchemy API 密钥
-   - `NEXT_PUBLIC_ENABLE_LOGS`: 设置为 `false` 禁用日志
-   - `NEXT_PUBLIC_ENABLE_DEBUG`: 设置为 `false` 禁用调试日志
-   - `NEXT_PUBLIC_DISABLE_WARNINGS`: 设置为 `false` 允许警告
+1. Push the project to a GitHub repository
+2. Import the project in Vercel
+3. Set the following environment variables:
+   - `NEXT_PUBLIC_ALCHEMY_API_KEY`: Your Alchemy API key
+   - `NEXT_PUBLIC_ENABLE_LOGS`: Set to `false` to disable logs
+   - `NEXT_PUBLIC_ENABLE_DEBUG`: Set to `false` to disable debug logs
+   - `NEXT_PUBLIC_DISABLE_WARNINGS`: Set to `false` to allow warnings
 
-4. 部署！
+4. Deploy!
 
-或者使用 Vercel CLI 进行部署：
+Or deploy using Vercel CLI:
 
 ```bash
 npm install -g vercel
@@ -70,36 +70,36 @@ vercel login
 vercel
 ```
 
-## 配置说明
+## Configuration
 
-- 日志配置: 在生产环境中，日志默认被禁用。如需启用，请设置环境变量 `NEXT_PUBLIC_ENABLE_LOGS=true`
-- API密钥: 在部署时需要设置 `NEXT_PUBLIC_ALCHEMY_API_KEY` 环境变量
-- 国际化: 支持英文(en)和中文(zh)，默认根据浏览器语言自动选择
+- Logging: In production, logging is disabled by default. To enable, set the environment variable `NEXT_PUBLIC_ENABLE_LOGS=true`
+- API Key: Set the `NEXT_PUBLIC_ALCHEMY_API_KEY` environment variable when deploying
+- Internationalization: Supports English (en) and Chinese (zh), automatically selected based on browser language
 
-## 技术栈
+## Tech Stack
 
 - Next.js
 - TypeScript
 - TailwindCSS
-- wagmi + RainbowKit (钱包连接)
-- Alchemy API (区块链数据)
+- wagmi + RainbowKit (wallet connection)
+- Alchemy API (blockchain data)
 
-## 使用指南
+## Usage Guide
 
-1. 打开应用，连接您的以太坊钱包
-2. 系统会自动获取钱包中的USDC交易记录
-3. 查看交易列表和收支汇总
-4. 使用"导出CSV"按钮导出交易数据
-5. 点击"创建发票"可以生成简易发票
+1. Open the application and connect your Ethereum wallet
+2. The system will automatically fetch USDC transaction records from your wallet
+3. View transaction list and income/expense summary
+4. Use the "Export CSV" button to export transaction data
+5. Click "Create Invoice" to generate a simple invoice
 
-## 后续计划
+## Future Plans
 
-- 支持多链 (Polygon, Arbitrum, Optimism等)
-- 支持多种稳定币 (USDT, DAI等)
-- 自动分类 (收入来源分类)
-- 自动生成月度/季度财务报表
-- 连接传统会计系统
+- Multi-chain support (Polygon, Arbitrum, Optimism, etc.)
+- Support for multiple stablecoins (USDT, DAI, etc.)
+- Automatic categorization (income source classification)
+- Auto-generate monthly/quarterly financial reports
+- Integration with traditional accounting systems
 
-## 许可证
+## License
 
 MIT
